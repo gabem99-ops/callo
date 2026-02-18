@@ -467,6 +467,20 @@ export class ApiClient {
     return this.del(`/api/integrations/${id}`);
   }
 
+  // ── Onboarding ────────────────────────────────────────────────────────────
+
+  completeOnboarding(data: {
+    industryTemplateId: string;
+    useCases: string[];
+    businessName: string;
+    phone?: string;
+    timezone: string;
+    voiceId: string;
+    greetingOverride?: string;
+  }): Promise<DataResponse<{ business: Business; script: any }>> {
+    return this.post("/api/onboarding/complete", data);
+  }
+
   // ── Business ──────────────────────────────────────────────────────────────
 
   getBusiness(): Promise<DataResponse<Business>> {
