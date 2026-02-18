@@ -14,7 +14,7 @@ export const VOICE_OPTIONS: VoiceOption[] = [
     name: "Aria",
     gender: "female",
     description: "Professional and clear — great for business calls",
-    previewFile: "/audio/voice-preview-aria.mp3",
+    previewFile: "/audio/voice-preview-aria.m4a",
   },
   {
     id: "marcus",
@@ -22,7 +22,7 @@ export const VOICE_OPTIONS: VoiceOption[] = [
     name: "Marcus",
     gender: "male",
     description: "Deep and authoritative — builds trust instantly",
-    previewFile: "/audio/voice-preview-marcus.mp3",
+    previewFile: "/audio/voice-preview-marcus.m4a",
   },
   {
     id: "luna",
@@ -30,7 +30,7 @@ export const VOICE_OPTIONS: VoiceOption[] = [
     name: "Luna",
     gender: "female",
     description: "Warm and friendly — callers feel at ease",
-    previewFile: "/audio/voice-preview-luna.mp3",
+    previewFile: "/audio/voice-preview-luna.m4a",
   },
   {
     id: "ethan",
@@ -38,7 +38,7 @@ export const VOICE_OPTIONS: VoiceOption[] = [
     name: "Ethan",
     gender: "male",
     description: "Casual and approachable — perfect for relaxed vibes",
-    previewFile: "/audio/voice-preview-ethan.mp3",
+    previewFile: "/audio/voice-preview-ethan.m4a",
   },
   {
     id: "sophie",
@@ -46,7 +46,7 @@ export const VOICE_OPTIONS: VoiceOption[] = [
     name: "Sophie",
     gender: "female",
     description: "Bright and energetic — keeps conversations lively",
-    previewFile: "/audio/voice-preview-sophie.mp3",
+    previewFile: "/audio/voice-preview-sophie.m4a",
   },
   {
     id: "daniel",
@@ -54,7 +54,7 @@ export const VOICE_OPTIONS: VoiceOption[] = [
     name: "Daniel",
     gender: "male",
     description: "Calm and measured — reassuring and confident",
-    previewFile: "/audio/voice-preview-daniel.mp3",
+    previewFile: "/audio/voice-preview-daniel.m4a",
   },
 ];
 

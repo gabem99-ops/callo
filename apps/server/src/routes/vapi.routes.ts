@@ -257,7 +257,7 @@ async function handleAssistantRequest(payload: VapiWebhookPayload, res: Response
       direction: call.type === "outboundPhoneCall" ? "outbound" : "inbound",
       status: "ringing",
       fromNumber: call.customer?.number || "unknown",
-      toNumber: calledNumber,
+      toNumber: calledNumber ?? "unknown",
       twilioCallSid: call.id, // Store Vapi call ID here
       startedAt: new Date(),
     })

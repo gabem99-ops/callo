@@ -570,7 +570,7 @@ export default function DashboardPage() {
           : STAT_CONFIGS.map((cfg) => {
               const Icon = cfg.icon;
               const value =
-                (resolvedStats as Record<string, number>)[cfg.key] ?? 0;
+                (resolvedStats as unknown as Record<string, number>)[cfg.key] ?? 0;
               return (
                 <Card key={cfg.key}>
                   <CardContent className="p-6">
