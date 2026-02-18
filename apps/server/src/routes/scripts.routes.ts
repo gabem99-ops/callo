@@ -5,7 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { type AuthRequest, requireBusiness } from "../middleware/auth.js";
 import { logger } from "../config/logger.js";
 import { AppError } from "../middleware/error-handler.js";
-import { createScriptSchema } from "@callo/shared";
+import { createScriptSchema, getVoiceByVapiId } from "@callo/shared";
 import { env } from "../config/env.js";
 import { buildSystemPrompt } from "../services/call-handler.service.js";
 import * as vapiService from "../services/vapi.service.js";
@@ -137,7 +137,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         businessId,
         name: body.name,
         type: body.type,
-        voice: body.voice ?? "alloy",
+        voice: body.voice ?? "21m00Tcm4TlvDq8ikWAM",
         greeting: body.greeting,
         systemPrompt: body.systemPrompt,
         faqs: body.faqs ?? [],
@@ -181,9 +181,11 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
     const serverUrl = `${env.SERVER_URL}/api/vapi/webhook`;
     try {
+      const voiceConfig = getVoiceByVapiId(script.voice);
       const assistant = await vapiService.createAssistant({
         name: `${business.name} - ${script.name}`,
         voice: script.voice,
+        voiceProvider: voiceConfig?.vapiProvider ?? "11labs",
         firstMessage: script.greeting,
         systemPrompt,
         tools: vapiService.getAssistantTools(serverUrl),
@@ -278,9 +280,10 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 
         const serverUrl = `${env.SERVER_URL}/api/vapi/webhook`;
         try {
+          const updatedVoiceConfig = getVoiceByVapiId(updated.voice);
           await vapiService.updateAssistant(updated.vapiAssistantId, {
             name: `${business.name} - ${updated.name}`,
-            voice: { provider: "openai", voiceId: updated.voice },
+            voice: { provider: updatedVoiceConfig?.vapiProvider ?? "11labs", voiceId: updated.voice },
             firstMessage: updated.greeting,
             model: {
               provider: "openai",

@@ -7,7 +7,7 @@ const VAPI_BASE_URL = "https://api.vapi.ai";
 interface VapiAssistantConfig {
   name: string;
   voice: {
-    provider: "openai";
+    provider: "openai" | "11labs";
     voiceId: string;
   };
   model: {
@@ -136,6 +136,7 @@ async function vapiRequest<T>(
 export async function createAssistant(config: {
   name: string;
   voice: string;
+  voiceProvider?: "openai" | "11labs";
   firstMessage: string;
   systemPrompt: string;
   tools: VapiTool[];
@@ -144,7 +145,7 @@ export async function createAssistant(config: {
   const payload: VapiAssistantConfig = {
     name: config.name,
     voice: {
-      provider: "openai",
+      provider: config.voiceProvider ?? "11labs",
       voiceId: config.voice,
     },
     model: {

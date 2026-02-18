@@ -45,7 +45,7 @@ router.post("/complete", async (req: AuthRequest, res: Response) => {
 
     // 2. Resolve voice
     const voice = VOICE_OPTIONS.find((v) => v.id === body.voiceId);
-    const vapiVoiceId = voice?.vapiVoiceId ?? "alloy";
+    const vapiVoiceId = voice?.vapiVoiceId ?? "21m00Tcm4TlvDq8ikWAM";
 
     // 3. Interpolate template content with business name
     const greeting = body.greetingOverride?.trim()
@@ -153,6 +153,7 @@ router.post("/complete", async (req: AuthRequest, res: Response) => {
       const assistant = await vapiService.createAssistant({
         name: `${business.name} - ${script.name}`,
         voice: script.voice,
+        voiceProvider: voice?.vapiProvider ?? "11labs",
         firstMessage: script.greeting,
         systemPrompt: fullSystemPrompt,
         tools: vapiService.getAssistantTools(serverUrl),
