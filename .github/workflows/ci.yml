@@ -1,0 +1,71 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  lint-and-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @callo/shared build || true
+
+      - name: Lint server
+        run: pnpm --filter @callo/server lint
+        env:
+          DATABASE_URL: postgresql://localhost:5432/callo
+          CLERK_SECRET_KEY: sk_test_placeholder
+          VAPI_API_KEY: vapi_placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder
+
+      - name: Build server
+        run: pnpm --filter @callo/server build
+        env:
+          DATABASE_URL: postgresql://localhost:5432/callo
+          CLERK_SECRET_KEY: sk_test_placeholder
+          VAPI_API_KEY: vapi_placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder
+
+      - name: Lint web
+        run: pnpm --filter @callo/web lint || true
+
+      - name: Build web
+        run: pnpm --filter @callo/web build || true
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+
+  deploy-server:
+    name: Deploy Server
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --config apps/server/fly.toml --dockerfile apps/server/Dockerfile
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

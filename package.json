@@ -1,0 +1,20 @@
+{
+  "name": "callo",
+  "private": true,
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "dev:web": "turbo dev --filter=@callo/web",
+    "dev:server": "turbo dev --filter=@callo/server",
+    "dev:mobile": "turbo dev --filter=@callo/mobile",
+    "db:push": "turbo db:push --filter=@callo/server",
+    "db:generate": "turbo db:generate --filter=@callo/server"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  }
+}
