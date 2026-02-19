@@ -4,14 +4,16 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   LayoutDashboard,
   Phone,
+  Bot,
   Radio,
   Settings,
 } from "lucide-react-native";
 
 import { DashboardScreen } from "@/screens/dashboard/DashboardScreen";
 import { CallsScreen } from "@/screens/calls/CallsScreen";
+import { ScriptStack } from "@/navigation/ScriptStack";
 import LiveMonitorScreen from "@/screens/live/LiveMonitorScreen";
-import { SettingsScreen } from "@/screens/settings/SettingsScreen";
+import { SettingsStack } from "@/navigation/SettingsStack";
 import { colors } from "@/lib/theme";
 
 // ---------------------------------------------------------------------------
@@ -21,6 +23,7 @@ import { colors } from "@/lib/theme";
 export type MainTabsParamList = {
   Dashboard: undefined;
   Calls: undefined;
+  Agent: undefined;
   Live: undefined;
   Settings: undefined;
 };
@@ -71,6 +74,15 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="Agent"
+        component={ScriptStack}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Bot color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Live"
         component={LiveMonitorScreen}
         options={{
@@ -81,7 +93,7 @@ export function MainTabs() {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsStack}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Settings color={color} size={size} />

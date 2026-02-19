@@ -1,3 +1,7 @@
+// ---------------------------------------------------------------------------
+// SettingsScreen -- Settings hub with menu rows navigating to sub-screens.
+// ---------------------------------------------------------------------------
+
 import React, { useCallback } from "react";
 import {
   View,
@@ -6,17 +10,31 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  RefreshControl,
 } from "react-native";
-import { useAuth, useUser } from "@clerk/clerk-expo";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  Building2,
+  Phone,
+  Bot,
+  Plug,
+  CreditCard,
+  LogOut,
+  ChevronRight,
+} from "lucide-react-native";
 import Constants from "expo-constants";
 
-import { useBusiness, useSubscription } from "../../lib/hooks";
-import { Card } from "../../components/common/Card";
-import { LoadingSpinner } from "../../components/common/LoadingSpinner";
-import { colors, spacing, borderRadius } from "../../lib/theme";
+import { useSubscription } from "@/lib/hooks";
+import { colors, spacing, borderRadius } from "@/lib/theme";
+import type { SettingsStackParamList } from "@/navigation/SettingsStack";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type SettingsNav = NativeStackNavigationProp<SettingsStackParamList>;
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -25,24 +43,8 @@ import { colors, spacing, borderRadius } from "../../lib/theme";
 export function SettingsScreen() {
   const { signOut } = useAuth();
   const { user } = useUser();
-  const {
-    business,
-    loading: businessLoading,
-    refresh: refreshBusiness,
-  } = useBusiness();
-  const {
-    subscription,
-    loading: subLoading,
-    refresh: refreshSub,
-  } = useSubscription();
-
-  const loading = businessLoading && subLoading;
-  const refreshing = businessLoading || subLoading;
-
-  const onRefresh = useCallback(() => {
-    refreshBusiness();
-    refreshSub();
-  }, [refreshBusiness, refreshSub]);
+  const navigation = useNavigation<SettingsNav>();
+  const { subscription } = useSubscription();
 
   const handleSignOut = useCallback(() => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -55,20 +57,14 @@ export function SettingsScreen() {
     ]);
   }, [signOut]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.centered}>
-          <LoadingSpinner />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const appVersion =
     Constants.expoConfig?.version ??
     Constants.manifest2?.extra?.expoClient?.version ??
     "1.0.0";
+
+  const planLabel = subscription?.plan
+    ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)
+    : null;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -76,98 +72,109 @@ export function SettingsScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
       >
         {/* Header */}
         <Text style={styles.title}>Settings</Text>
 
         {/* User card */}
-        <Card style={styles.card}>
-          <View style={styles.userRow}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user?.firstName?.[0]?.toUpperCase() ??
-                  user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ??
-                  "?"}
-              </Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>
-                {user?.fullName ??
-                  user?.emailAddresses?.[0]?.emailAddress ??
-                  "User"}
-              </Text>
-              <Text style={styles.userEmail}>
-                {user?.emailAddresses?.[0]?.emailAddress ?? ""}
-              </Text>
-            </View>
+        <View style={styles.userCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.firstName?.[0]?.toUpperCase() ??
+                user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ??
+                "?"}
+            </Text>
           </View>
-        </Card>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>
+              {user?.fullName ??
+                user?.emailAddresses?.[0]?.emailAddress ??
+                "User"}
+            </Text>
+            <Text style={styles.userEmail}>
+              {user?.emailAddresses?.[0]?.emailAddress ?? ""}
+            </Text>
+          </View>
+        </View>
 
-        {/* Business info */}
-        <Text style={styles.sectionTitle}>Business</Text>
-        <Card style={styles.card}>
-          <InfoRow
-            icon="business-outline"
-            label="Name"
-            value={business?.name ?? "Not set"}
+        {/* Account Section */}
+        <Text style={styles.sectionHeader}>ACCOUNT</Text>
+        <View style={styles.menuGroup}>
+          <MenuRow
+            icon={<Building2 size={20} color={colors.textSecondary} />}
+            label="Business Profile"
+            subtitle="Name, hours, contact info"
+            onPress={() => navigation.navigate("BusinessProfile")}
           />
-          <View style={styles.divider} />
-          <InfoRow
-            icon="briefcase-outline"
-            label="Industry"
-            value={business?.industry ?? "Not set"}
+          <View style={styles.menuDivider} />
+          <MenuRow
+            icon={<Phone size={20} color={colors.textSecondary} />}
+            label="Phone Numbers"
+            subtitle="Manage your AI phone lines"
+            onPress={() => navigation.navigate("PhoneNumbers")}
           />
-          <View style={styles.divider} />
-          <InfoRow
-            icon="time-outline"
-            label="Timezone"
-            value={business?.timezone ?? "Not set"}
-          />
-          {business?.website ? (
-            <>
-              <View style={styles.divider} />
-              <InfoRow
-                icon="globe-outline"
-                label="Website"
-                value={business.website}
-              />
-            </>
-          ) : null}
-        </Card>
+        </View>
 
-        {/* Subscription */}
-        <Text style={styles.sectionTitle}>Subscription</Text>
-        <Card style={styles.card}>
-          <InfoRow
-            icon="card-outline"
-            label="Plan"
-            value={subscription?.plan ?? "Free"}
+        {/* AI Agent Section */}
+        <Text style={styles.sectionHeader}>AI AGENT</Text>
+        <View style={styles.menuGroup}>
+          <MenuRow
+            icon={<Bot size={20} color={colors.textSecondary} />}
+            label="Manage AI Script"
+            subtitle="Greeting, voice, tone, FAQs"
+            onPress={() => {
+              // Navigate to the Scripts tab in the main tabs
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("Agent");
+              }
+            }}
           />
-          <View style={styles.divider} />
-          <InfoRow
-            icon="checkmark-circle-outline"
-            label="Status"
-            value={subscription?.status ?? "Inactive"}
-          />
-        </Card>
+        </View>
 
-        {/* Sign out */}
-        <TouchableOpacity
-          style={styles.signOutButton}
-          onPress={handleSignOut}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        {/* Connections Section */}
+        <Text style={styles.sectionHeader}>CONNECTIONS</Text>
+        <View style={styles.menuGroup}>
+          <MenuRow
+            icon={<Plug size={20} color={colors.textSecondary} />}
+            label="Integrations"
+            subtitle="Google Calendar, Zapier, CRM"
+            onPress={() => navigation.navigate("Integrations")}
+          />
+        </View>
+
+        {/* Billing Section */}
+        <Text style={styles.sectionHeader}>BILLING</Text>
+        <View style={styles.menuGroup}>
+          <MenuRow
+            icon={<CreditCard size={20} color={colors.textSecondary} />}
+            label="Subscription & Billing"
+            subtitle={planLabel ? `${planLabel} plan` : "Manage your plan"}
+            onPress={() => {
+              // TODO: Navigate to billing screen when implemented
+              Alert.alert(
+                "Billing",
+                "Subscription management coming soon to mobile.",
+              );
+            }}
+          />
+        </View>
+
+        {/* Sign Out */}
+        <View style={[styles.menuGroup, { marginTop: spacing.xl }]}>
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={handleSignOut}
+            activeOpacity={0.6}
+          >
+            <View style={styles.menuIconWrap}>
+              <LogOut size={20} color={colors.error} />
+            </View>
+            <View style={styles.menuContent}>
+              <Text style={styles.menuLabelDanger}>Sign Out</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* Version */}
         <Text style={styles.versionText}>Callo v{appVersion}</Text>
@@ -177,32 +184,32 @@ export function SettingsScreen() {
 }
 
 // ---------------------------------------------------------------------------
-// Info row helper
+// Menu row component
 // ---------------------------------------------------------------------------
 
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: string;
+interface MenuRowProps {
+  icon: React.ReactNode;
   label: string;
-  value: string;
-}) {
+  subtitle?: string;
+  onPress: () => void;
+}
+
+function MenuRow({ icon, label, subtitle, onPress }: MenuRowProps) {
   return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoLeft}>
-        <Ionicons
-          name={icon as keyof typeof Ionicons.glyphMap}
-          size={18}
-          color={colors.textMuted}
-        />
-        <Text style={styles.infoLabel}>{label}</Text>
+    <TouchableOpacity
+      style={styles.menuRow}
+      onPress={onPress}
+      activeOpacity={0.6}
+    >
+      <View style={styles.menuIconWrap}>{icon}</View>
+      <View style={styles.menuContent}>
+        <Text style={styles.menuLabel}>{label}</Text>
+        {subtitle ? (
+          <Text style={styles.menuSubtitle}>{subtitle}</Text>
+        ) : null}
       </View>
-      <Text style={styles.infoValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
+      <ChevronRight size={18} color={colors.textMuted} />
+    </TouchableOpacity>
   );
 }
 
@@ -215,11 +222,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   scrollView: {
     flex: 1,
   },
@@ -227,6 +229,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xl + spacing.xl,
   },
+
+  // Header
   title: {
     fontSize: 28,
     fontWeight: "700",
@@ -234,25 +238,18 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     marginBottom: spacing.lg,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.xs,
-  },
-  card: {
-    marginBottom: 0,
-  },
 
-  // User row
-  userRow: {
+  // User card
+  userCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
   avatar: {
     width: 48,
@@ -281,51 +278,61 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 
-  // Info rows
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: spacing.sm + 2,
-  },
-  infoLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textPrimary,
-    maxWidth: "50%",
-    textAlign: "right",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
+  // Section header
+  sectionHeader: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
 
-  // Sign out
-  signOutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
+  // Menu group
+  menuGroup: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingVertical: 16,
-    marginTop: spacing.xl,
+    borderRadius: borderRadius.lg,
+    overflow: "hidden",
   },
-  signOutText: {
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginLeft: 56, // offset for icon
+  },
+
+  // Menu row
+  menuRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 56,
+    paddingHorizontal: spacing.md,
+  },
+  menuIconWrap: {
+    width: 24,
+    alignItems: "center",
+    marginRight: spacing.md,
+  },
+  menuContent: {
+    flex: 1,
+  },
+  menuLabel: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "500",
+    color: colors.textPrimary,
+  },
+  menuLabelDanger: {
+    fontSize: 15,
+    fontWeight: "500",
     color: colors.error,
+  },
+  menuSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 1,
   },
 
   // Version
@@ -333,6 +340,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     textAlign: "center",
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
   },
 });
